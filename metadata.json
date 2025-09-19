@@ -1,0 +1,7 @@
+{
+  "name": "RSRTC Voice Bus Search",
+  "description": "An application to search for RSRTC buses using voice commands in both English and Hindi. The app provides visual results and speaks the details of the next available bus in the user's language.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}
