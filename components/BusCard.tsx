@@ -15,7 +15,7 @@ export const BusCard: React.FC<BusCardProps> = ({ bus, lang }) => {
   const t = translations[lang];
   const [showRoute, setShowRoute] = useState(false);
 
-  console.log("showRoute", showRoute);
+
 
 
   return (
