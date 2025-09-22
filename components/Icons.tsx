@@ -1,10 +1,21 @@
 import React from 'react';
 
 export const MicrophoneIcon: React.FC<{ className?: string }> = ({ className }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
-    <path d="M12 2a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3ZM11 5a1 1 0 0 1 2 0v6a1 1 0 0 1-2 0V5Z"></path>
-    <path d="M7 11a1 1 0 0 1 1-1h.5a1 1 0 0 1 1 1v.5a5.5 5.5 0 0 0 5 5V17a1 1 0 0 1 1 1h.5a1 1 0 0 1-1 1h-6a1 1 0 0 1-1-1H7a1 1 0 0 1-1-1v-.5a5.5 5.5 0 0 0 5-5v-.5a1 1 0 0 1-1-1H8a1 1 0 0 1-1-1Z"></path>
-  </svg>
+  <svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 128 128"
+  fill="none"
+  stroke="currentColor"
+  strokeWidth="8"
+  strokeLinecap="round"
+  strokeLinejoin="round"
+  className={className}
+>
+  <line x1="64" y1="96.9" x2="64" y2="109.5" />
+  <path d="M64,81c-10.7,0-19.4-8.7-19.4-19.4V39.9c0-10.7,8.7-19.4,19.4-19.4s19.4,8.7,19.4,19.4v21.7C83.4,72.3,74.7,81,64,81z" />
+  <path d="M64,96.9c-20.1,0-36.5-16.3-36.5-36.5" />
+  <path d="M100.5,60.4c0,15.4-9.5,28.5-22.9,33.9" />
+</svg>
 );
 
 export const BusIcon: React.FC<{ className?: string }> = ({ className }) => (

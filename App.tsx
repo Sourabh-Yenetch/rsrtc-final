@@ -5,10 +5,11 @@ import { BusCard } from "./components/BusCard";
 import { MicrophoneIcon, SearchIcon, ArrowRightIcon } from "./components/Icons";
 import { useVoiceRecognition } from "./hooks/useVoiceRecognition";
 import { useSpeechSynthesis } from "./hooks/useSpeechSynthesis";
-import { DUMMY_BUSES, translations } from "./constants";
 import { Language } from "./types";
 import type { Bus } from "./types";
-import { getDepartureDate, formatTime } from "./utils/timeHelper";
+import { formatTime } from "./utils/timeHelper";
+import { getAvailableServices } from "./services/rsrtc"; 
+import { translations } from "./constants";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
@@ -35,6 +36,83 @@ const App: React.FC = () => {
     hasRecognitionSupport,
   } = useVoiceRecognition(lang);
   const { speak } = useSpeechSynthesis();
+
+  // New searchBuses with API integration (Defined first for dependency)
+  const searchBuses = useCallback(async () => {
+    if (fromCity && toCity) {
+      setStatus("processing");
+      setBuses([]); // Clear previous results
+
+      try {
+        const foundBuses = await getAvailableServices(fromCity, toCity);
+
+        setBuses(foundBuses);
+
+        if (foundBuses.length > 0) {
+          setStatus("success");
+
+          const firstBus = foundBuses[0];
+          const currentLangKey = lang === Language.ENGLISH ? "en" : "hi";
+
+          // Safely get location names for the announcement
+          const fromLocationName =
+            typeof firstBus.from === "object"
+              ? firstBus.from[currentLangKey]
+              : firstBus.from;
+          const toLocationName =
+            typeof firstBus.to === "object"
+              ? firstBus.to[currentLangKey]
+              : firstBus.to;
+
+          const busWord =
+            foundBuses.length === 1
+              ? lang === Language.ENGLISH
+                ? "bus"
+                : "बस"
+              : lang === Language.ENGLISH
+              ? "buses"
+              : "बसें";
+
+          const generalAnnouncement = t.foundBuses
+            .replace("{count}", foundBuses.length.toString())
+            .replace("{busWord}", busWord)
+            .replace("{from}", fromLocationName)
+            .replace("{to}", toLocationName);
+
+          const detailedAnnouncement = t.firstBusDetails
+            .replace("{name}", firstBus.name)
+            .replace("{type}", firstBus.type)
+            .replace("{platform}", firstBus.platform.toString())
+            .replace("{departureTime}", formatTime(firstBus.departureTime))
+            .replace("{fare}", firstBus.fare.toString());
+
+          // Announce details only if triggered by voice
+          if (triggeredByVoice) {
+             speak(generalAnnouncement + detailedAnnouncement, lang);
+          }
+         
+        } else {
+          setStatus("no_buses");
+          speak(t.noBuses, lang);
+        }
+      } catch (error) {
+        console.error("Search error:", error);
+        setStatus("error");
+        setError(t.error);
+        speak(t.error, lang);
+      }
+    }
+  }, [
+    fromCity,
+    toCity,
+    lang,
+    speak,
+    triggeredByVoice, // Added as a dependency for announcements
+    t.noBuses,
+    t.foundBuses,
+    t.firstBusDetails,
+    t.error,
+  ]);
 
   const parseQueryWithAI = useCallback(
     async (text: string) => {
@@ -79,7 +157,7 @@ const App: React.FC = () => {
           }
           setToCity(result.to);
           setTriggeredByVoice(true);
-          searchBuses();
+          searchBuses(); // Trigger search immediately after setting city
         } else {
           throw new Error(
             "Could not parse destination city and language from response."
@@ -92,7 +170,7 @@ const App: React.FC = () => {
         speak(t.error, lang);
       }
     },
-    [lang, speak, t.error, t.jaipurAsDestinationError]
+    [lang, speak, t.error, t.jaipurAsDestinationError, searchBuses]
   );
 
   useEffect(() => {
@@ -119,204 +197,7 @@ const App: React.FC = () => {
     }
   }, [recognitionError, t.error]);
 
-  // const searchBuses = useCallback(() => {
-  //   if (fromCity && toCity) {
-  //       setStatus('processing');
-  //       setTimeout(() => {
-  //           const from = fromCity.toLowerCase().trim();
-  //           const to = toCity.toLowerCase().trim();
-  //           const foundBuses = DUMMY_BUSES.filter(bus =>
-  //               bus.from.toLowerCase() === from &&
-  //               bus.to.toLowerCase() === to
-  //           ).sort((a, b) => a.departureTime.localeCompare(b.departureTime));
-
-  //           setBuses(foundBuses);
-
-  //           console.log("Found buses:", foundBuses);
-
-  //           if (foundBuses.length > 0) {
-  //               setStatus('success');
-
-  //               const now = new Date();
-  //               const upcomingBuses = foundBuses.filter(bus => getDepartureDate(bus.departureTime) > now);
-  //               const firstBus = upcomingBuses.length > 0 ? upcomingBuses[0] : foundBuses[0];
-
-  //               let generalAnnouncement;
-  //               if (foundBuses.length === 1) {
-  //                   generalAnnouncement = t.foundBusSingular
-  //                       .replace('{from}', fromCity)
-  //                       .replace('{to}', toCity);
-  //               } else {
-  //                   generalAnnouncement = t.foundBuses
-  //                       .replace('{count}', foundBuses.length.toString())
-  //                       .replace('{from}', fromCity)
-  //                       .replace('{to}', toCity);
-  //               }
-
-  //               const detailedAnnouncement = t.firstBusDetails
-  //                   .replace('{name}', firstBus.name)
-  //                   .replace('{type}', firstBus.type)
-  //                   .replace('{platform}', firstBus.platform.toString())
-  //                   .replace('{departureTime}', formatTime(firstBus.departureTime))
-  //                   .replace('{fare}', firstBus.fare.toString());
-
-  //               speak(generalAnnouncement + detailedAnnouncement, lang);
-
-  //           } else {
-  //               setStatus('no_buses');
-  //               speak(t.noBuses, lang);
-  //           }
-  //       }, 300);
-  //   }
-  // }, [fromCity, toCity, lang, speak, t.noBuses, t.foundBuses, t.foundBusSingular, t.firstBusDetails]);
-
-  // const searchBuses = useCallback(() => {
-  //     if (toCity) {
-  //         setStatus('processing');
-  //         setTimeout(() => {
-  //             const to = toCity.toLowerCase().trim();
-  //             console.log("Searching buses to:", to);
-  //             console.log("DUMMY_BUSES:", DUMMY_BUSES);
-
-  //             const foundBuses = DUMMY_BUSES.filter(bus => {
-
-  //                 if (!bus.to) return false;  // Skip if bus.to is null or undefined
-
-  //                 const toCityValue = typeof bus.to === 'object'
-  //                     ? bus?.to[lang === 'en' ? 'hi' : 'en']
-  //                     : bus.to;
-
-  //                 return toCityValue && toCityValue.toLowerCase() === to;
-  //             }).sort((a, b) => a.departureTime.localeCompare(b.departureTime));
-
-  //             setBuses(foundBuses);
-
-  //             console.log("Found buses:", foundBuses);
-
-  //             if (foundBuses.length > 0) {
-  //                 setStatus('success');
-
-  //                 const now = new Date();
-  //                 const upcomingBuses = foundBuses.filter(bus => getDepartureDate(bus.departureTime) > now);
-  //                 const firstBus = upcomingBuses.length > 0 ? upcomingBuses[0] : foundBuses[0];
-
-  //                  const busWord =
-  //             foundBuses.length === 1
-  //               ? lang === Language.ENGLISH
-  //                 ? "bus"
-  //                 : "बस"
-  //               : lang === Language.ENGLISH
-  //               ? "buses"
-  //               : "बसें";
-
-  //                 let generalAnnouncement;
-  //                 if (foundBuses.length === 1) {
-  //                     generalAnnouncement = t.foundBusSingular
-  //                         .replace('{to}', toCity);
-  //                 } else {
-  //                     generalAnnouncement = t.foundBuses
-  //                         .replace('{count}', foundBuses.length.toString())
-  //                         .replace('{to}', toCity);
-  //                 }
-
-  //                 const detailedAnnouncement = t.firstBusDetails
-  //                     .replace('{name}', firstBus.name)
-  //                     .replace('{type}', firstBus.type)
-  //                     .replace('{platform}', firstBus.platform.toString())
-  //                     .replace('{departureTime}', formatTime(firstBus.departureTime))
-  //                     .replace('{fare}', firstBus.fare.toString());
-
-  //                 speak(generalAnnouncement + detailedAnnouncement, lang);
-
-  //             } else {
-  //                 setStatus('no_buses');
-  //                 speak(t.noBuses, lang);
-  //             }
-  //         }, 300);
-  //     }
-  // }, [toCity, lang, speak, t.noBuses, t.foundBuses, t.foundBusSingular, t.firstBusDetails]);
-
-  const searchBuses = useCallback(() => {
-    if (fromCity && toCity) {
-      setStatus("processing");
-      setTimeout(() => {
-        const from = fromCity.toLowerCase().trim();
-        const to = toCity.toLowerCase().trim();
-
-        const foundBuses = DUMMY_BUSES.filter((bus) => {
-          const fromCityValue =
-            typeof bus.from === "object"
-              ? bus.from.en.toLowerCase() === from || bus.from.hi === from
-              : typeof bus.from === "string" && bus.from.toLowerCase() === from;
-
-          const toCityValue =
-            typeof bus.to === "object"
-              ? bus.to.en.toLowerCase() === to || bus.to.hi === to
-              : typeof bus.to === "string" && bus.to.toLowerCase() === to;
-
-          return fromCityValue && toCityValue;
-        }).sort((a, b) => {
-          const departureA = getDepartureDate(a.departureTime);
-          const departureB = getDepartureDate(b.departureTime);
-          return departureA.getTime() - departureB.getTime();
-        });
-
-        setBuses(foundBuses);
-
-        if (foundBuses.length > 0) {
-          setStatus("success");
-
-          const firstBus = foundBuses[0];
-          const currentLangKey = lang === Language.ENGLISH ? "en" : "hi";
-
-          const fromLocationName =
-            typeof firstBus.from === "object"
-              ? firstBus.from[currentLangKey]
-              : firstBus.from;
-          const toLocationName =
-            typeof firstBus.to === "object"
-              ? firstBus.to[currentLangKey]
-              : firstBus.to;
-
-          const busWord =
-            foundBuses.length === 1
-              ? lang === Language.ENGLISH
-                ? "bus"
-                : "बस"
-              : lang === Language.ENGLISH
-              ? "buses"
-              : "बसें";
-
-          const generalAnnouncement = t.foundBuses
-            .replace("{count}", foundBuses.length.toString())
-            .replace("{busWord}", busWord)
-            .replace("{from}", fromLocationName)
-            .replace("{to}", toLocationName);
-
-          const detailedAnnouncement = t.firstBusDetails
-            .replace("{name}", firstBus.name)
-            .replace("{type}", firstBus.type)
-            .replace("{platform}", firstBus.platform.toString())
-            .replace("{departureTime}", formatTime(firstBus.departureTime))
-            .replace("{fare}", firstBus.fare.toString());
-
-          speak(generalAnnouncement + detailedAnnouncement, lang);
-        } else {
-          setStatus("no_buses");
-          speak(t.noBuses, lang);
-        }
-      }, 300);
-    }
-  }, [
-    fromCity,
-    toCity,
-    lang,
-    speak,
-    t.noBuses,
-    t.foundBuses,
-    t.firstBusDetails,
-  ]);
-
+  // Effect to trigger search when typing changes, but only if NOT triggered by voice
   useEffect(() => {
     if (fromCity && toCity && !triggeredByVoice) {
       const handler = setTimeout(() => {
@@ -330,6 +211,7 @@ const App: React.FC = () => {
     }
   }, [fromCity, toCity, searchBuses, triggeredByVoice]);
 
+  // Effect to clear results after a timeout
   useEffect(() => {
     if (buses.length > 0) {
       const timer = setTimeout(() => {
@@ -355,6 +237,7 @@ const App: React.FC = () => {
   };
 
   const handleSearchClick = () => {
+    setTriggeredByVoice(false); // Manually triggered search should not speak
     setBuses([]);
     if (fromCity && toCity) {
       searchBuses();
@@ -418,7 +301,7 @@ const App: React.FC = () => {
 
       <main className="container mx-auto p-4 md:p-8">
         <div className="max-w-2xl mx-auto mb-8">
-          <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg">
+          <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg banner-image">
             <img
               src="./assets/rsrtc-banner.jpg"
               alt="banner"

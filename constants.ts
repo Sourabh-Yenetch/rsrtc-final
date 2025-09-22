@@ -46,7 +46,7 @@ export const translations = {
   },
 };
 
-const locations: Record<string, Location> = {
+export  const locations: Record<string, Location> = {
   jaipur: { en: "Jaipur", hi: "जयपुर" },
   jodhpur: { en: "Jodhpur", hi: "जोधपुर" },
   delhi: { en: "Delhi", hi: "दिल्ली" },
@@ -82,6 +82,8 @@ const locations: Record<string, Location> = {
   sirohi: { en: "Sirohi", hi: "सिरोही" },
   mountabu: { en: "Mount Abu", hi: "माउंट आबू" },
 };
+
+
 
 export const DUMMY_BUSES: Bus[] = [
   // Jaipur to Jodhpur routes
