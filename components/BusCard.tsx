@@ -19,15 +19,15 @@ export const BusCard: React.FC<BusCardProps> = ({ bus, lang }) => {
 
 
   return (
-    <div className="bg-white rounded-xl shadow-lg overflow-hidden transform hover:scale-[1.02] transition-transform duration-300 ease-in-out">
-      <div className="p-6">
-        <div className="flex justify-between items-start">
+    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden transform hover:scale-[1.02] transition-transform duration-300 ease-in-out">
+      <div className="p-2">
+        <div className="flex justify-between items-start w-full">
           <div>
             <div className="flex items-center gap-3">
-              <BusIcon className="w-6 h-6 text-indigo-500" />
+              <BusIcon className="w-8 h-8 text-[#228BCB]" />
               <h3 className="text-xl font-bold text-slate-800">{bus.name}</h3>
             </div>
-            <p className="text-sm text-indigo-500 font-semibold">{bus.type}</p>
+            <p className="text-sm text-[#228BCB] font-semibold">{bus.type}</p>
           </div>
           <div className="text-right">
             <p className="text-2xl font-bold text-slate-800">₹{bus.fare}</p>
@@ -35,13 +35,13 @@ export const BusCard: React.FC<BusCardProps> = ({ bus, lang }) => {
           </div>
         </div>
 
-        <div className="mt-6 grid grid-cols-3 gap-4 items-center text-center">
+        <div className="mt-2 grid grid-cols-3 gap-4 items-center text-center">
           <div>
             <p className="text-lg font-semibold text-slate-700">{formatTime(bus.departureTime)}</p>
             {typeof bus.from === 'string' ? bus.from : bus.from[lang]}
           </div>
           <div className="flex flex-col items-center">
-            <ArrowRightIcon className="w-8 h-8 text-slate-400" />
+            <ArrowRightIcon className="w-8 h-8 text-[#228BCB]" />
             <p className="text-xs text-slate-500 mt-1">{bus.duration}</p>
           </div>
           <div>
@@ -52,10 +52,10 @@ export const BusCard: React.FC<BusCardProps> = ({ bus, lang }) => {
           </div>
         </div>
 
-        <div className="mt-6 text-center">
+        {/* <div className="mt-6 text-center">
           <button
             onClick={() => setShowRoute(!showRoute)}
-            className="text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors"
+            className="text-sm font-medium text-[#228BCB] hover:text-[#0ca4db] transition-colors"
           >
             {showRoute ? 'Hide' : t.route} {showRoute ? '▲' : '▼'}
           </button>
@@ -83,15 +83,15 @@ export const BusCard: React.FC<BusCardProps> = ({ bus, lang }) => {
               })}
             </div>
           </div>
-        )}
+        )} */}
 
-
-      </div>
-      <div className="bg-slate-50 px-6 py-4">
-        <div className="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg">
+<div className=" px-6 py-4 mt-2">
+        <div className="w-full rounded-xl bg-[#228BCB] text-white font-bold py-3 px-4 rounded-lg hover:bg-[#0ca4db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out ">
           <p className="text-center">Platform {bus.platform}</p>
         </div>
       </div>
+      </div>
+      
     </div>
   );
 };

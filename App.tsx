@@ -8,7 +8,7 @@ import { useSpeechSynthesis } from "./hooks/useSpeechSynthesis";
 import { Language } from "./types";
 import type { Bus } from "./types";
 import { formatTime } from "./utils/timeHelper";
-import { getAvailableServices } from "./services/rsrtc"; 
+import { getAvailableServices } from "./services/rsrtc";
 import { translations } from "./constants";
 
 const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
@@ -45,6 +45,7 @@ const App: React.FC = () => {
 
       try {
         const foundBuses = await getAvailableServices(fromCity, toCity);
+        console.log("found buses", foundBuses);
 
         setBuses(foundBuses);
 
@@ -86,11 +87,7 @@ const App: React.FC = () => {
             .replace("{departureTime}", formatTime(firstBus.departureTime))
             .replace("{fare}", firstBus.fare.toString());
 
-          // Announce details only if triggered by voice
-          if (triggeredByVoice) {
-             speak(generalAnnouncement + detailedAnnouncement, lang);
-          }
-         
+          speak(generalAnnouncement + detailedAnnouncement, lang);
         } else {
           setStatus("no_buses");
           speak(t.noBuses, lang);
@@ -212,16 +209,16 @@ const App: React.FC = () => {
   }, [fromCity, toCity, searchBuses, triggeredByVoice]);
 
   // Effect to clear results after a timeout
-  useEffect(() => {
-    if (buses.length > 0) {
-      const timer = setTimeout(() => {
-        setToCity("");
-        setBuses([]);
-      }, 60000);
+  // useEffect(() => {
+  //   if (buses.length > 0) {
+  //     const timer = setTimeout(() => {
+  //       setToCity("");
+  //       setBuses([]);
+  //     }, 60000);
 
-      return () => clearTimeout(timer);
-    }
-  }, [buses]);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [buses]);
 
   const handleMicClick = () => {
     if (isListening) {
@@ -262,7 +259,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 text-slate-800 font-sans">
+    <div className=" bg-gray-50 text-slate-800 font-sans">
       <header className="bg-white shadow-md p-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
           <img
@@ -270,7 +267,7 @@ const App: React.FC = () => {
             alt="RSRTC Logo"
             className="h-10 w-10 object-contain"
           />
-          <h1 className="text-xl sm:text-2xl font-bold text-indigo-600">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#228BCB]">
             {t.title}
           </h1>
         </div>
@@ -278,8 +275,8 @@ const App: React.FC = () => {
           <button
             className={`p-1 rounded ${
               lang === Language.ENGLISH
-                ? "font-bold text-indigo-600"
-                : "hover:text-indigo-600"
+                ? "font-bold text-[#228BCB]"
+                : "hover:text-[#228BCB]"
             }`}
             onClick={() => setLang(Language.ENGLISH)}
           >
@@ -289,8 +286,8 @@ const App: React.FC = () => {
           <button
             className={`p-1 rounded ${
               lang === Language.HINDI
-                ? "font-bold text-indigo-600"
-                : "hover:text-indigo-600"
+                ? "font-bold text-[#228BCB]"
+                : "hover:text-[#228BCB]"
             }`}
             onClick={() => setLang(Language.HINDI)}
           >
@@ -299,131 +296,159 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      <main className="container mx-auto p-4 md:p-8">
-        <div className="max-w-2xl mx-auto mb-8">
-          <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg banner-image">
-            <img
-              src="./assets/rsrtc-banner.jpg"
-              alt="banner"
-              className="w-full h-full object-initial rounded-xl"
-            />
-          </div>
-        </div>
-
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8 max-w-2xl mx-auto">
-          <div className="flex flex-col sm:flex-row items-center gap-4">
-            <div className="relative flex-1 w-full">
-              <input
-                type="text"
-                value={fromCity}
-                disabled
-                placeholder={t.from}
-                className="w-full p-4 pl-12 rounded-lg border-2 border-slate-200 bg-slate-100 cursor-not-allowed focus:outline-none"
-              />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+      <main className="flex flex-col">
+        <section className="flex flex-1 container mx-auto flex-col lg:flex-row gap-6 p-4 md:p-8 overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="max-w-2xl mx-1 mb-3">
+              <div className="w-full h-48 bg-gray-200 rounded-lg flex items-center justify-center text-gray-500 font-semibold text-lg banner-image">
+                <img
+                  src="./assets/rsrtc-banner.jpg"
+                  alt="banner"
+                  className="w-full h-full object-cover rounded-xl"
+                />
               </div>
             </div>
 
-            <div className="p-2 text-slate-400 transform rotate-90 sm:rotate-0">
-              <ArrowRightIcon className="w-6 h-6" />
+            <div className="bg-white rounded-xl  p-6 mb-8 max-w-2xl mx-1">
+              <div className="flex flex-col sm:flex-row items-center gap-4">
+                <div className="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    value={fromCity}
+                    disabled
+                    placeholder={t.from}
+                    className="w-full p-4 pl-12 rounded-lg border-2 border-slate-200 bg-slate-100 cursor-not-allowed focus:outline-none"
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-[#228BCB] pointer-events-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+
+                <div className="p-2 text-slate-400 transform rotate-90 sm:rotate-0">
+                  <ArrowRightIcon className="w-6 h-6 text-[#228BCB]" />
+                </div>
+
+                <div className="relative flex-1 w-full">
+                  <input
+                    type="text"
+                    value={toCity}
+                    onChange={(e) => setToCity(e.target.value)}
+                    placeholder={t.to}
+                    className="w-full p-4 pl-12 rounded-lg border-2 border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                  />
+                  <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-[#228BCB] pointer-events-none">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center mt-6">
+                <button
+                  onClick={handleSearchClick}
+                  disabled={!toCity || status === "processing" || isListening}
+                  className="w-full sm:w-48 bg-[#228BCB] text-white font-bold py-3 px-6 rounded-xl hover:bg-[#0ca4db] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:cursor-not-allowed"
+                >
+                  <SearchIcon className="w-5 h-5" />
+                  <span>{t.search}</span>
+                </button>
+                {hasRecognitionSupport && (
+                  <button
+                    onClick={handleMicClick}
+                    disabled={status === "processing"}
+                    className={`relative rounded-full p-4 transition-all duration-300 ease-in-out shadow-lg ${
+                      isListening
+                        ? "bg-red-500 hover:bg-red-600 animate-pulse"
+                        : "bg-[#228BCB] hover:bg-[#0ca4db]"
+                    } disabled:bg-slate-400 disabled:cursor-not-allowed`}
+                    aria-label={
+                      isListening ? "Stop listening" : "Start listening"
+                    }
+                  >
+                    <MicrophoneIcon className="w-6 h-6 text-white" />
+                  </button>
+                )}
+              </div>
+
+              <p className="text-center mt-4 text-slate-500 min-h-[24px]">
+                {getStatusMessage()}
+              </p>
+              {displayedTranscript && (
+                <p className="text-center mt-2 text-slate-600 italic">
+                  {t.youSaid}"{displayedTranscript}"
+                </p>
+              )}
             </div>
 
-            <div className="relative flex-1 w-full">
-              <input
-                type="text"
-                value={toCity}
-                onChange={(e) => setToCity(e.target.value)}
-                placeholder={t.to}
-                className="w-full p-4 pl-12 rounded-lg border-2 border-slate-200 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-              />
-              <div className="absolute inset-y-0 left-0 flex items-center pl-4 text-slate-400 pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                </svg>
+            {(status === "no_buses" ||
+              (status === "error" && !isListening)) && (
+              <div className="text-center py-10">
+                <p className="text-lg text-slate-500">{getStatusMessage()}</p>
               </div>
-            </div>
-          </div>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-6">
-            <button
-              onClick={handleSearchClick}
-              disabled={!toCity || status === "processing" || isListening}
-              className="w-full sm:w-48 bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all duration-300 ease-in-out shadow-md hover:shadow-lg flex items-center justify-center gap-2 disabled:bg-slate-400 disabled:cursor-not-allowed"
-            >
-              <SearchIcon className="w-5 h-5" />
-              <span>{t.search}</span>
-            </button>
-            {hasRecognitionSupport && (
-              <button
-                onClick={handleMicClick}
-                disabled={status === "processing"}
-                className={`relative rounded-full p-4 transition-all duration-300 ease-in-out shadow-lg ${
-                  isListening
-                    ? "bg-red-500 hover:bg-red-600 animate-pulse"
-                    : "bg-indigo-600 hover:bg-indigo-700"
-                } disabled:bg-slate-400 disabled:cursor-not-allowed`}
-                aria-label={isListening ? "Stop listening" : "Start listening"}
-              >
-                <MicrophoneIcon className="w-8 h-8 text-white" />
-              </button>
             )}
-          </div>
-          <p className="text-center mt-4 text-slate-500 min-h-[24px]">
-            {getStatusMessage()}
-          </p>
-          {displayedTranscript && (
-            <p className="text-center mt-2 text-slate-600 italic">
-              {t.youSaid}"{displayedTranscript}"
-            </p>
-          )}
-        </div>
 
-        {(status === "no_buses" || (status === "error" && !isListening)) && (
-          <div className="text-center py-10">
-            <p className="text-lg text-slate-500">{getStatusMessage()}</p>
+            <div className="flex-1 flex flex-col mx-1">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden max-h-[28vh]">
+                <div className="grid gap-4 grid-cols-2 md:grid-cols-2 lg:grid-cols-2 w-full max-w-4xl">
+                  {buses.map((bus) => (
+                    <BusCard key={bus.id} bus={bus} lang={lang} />
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
-        )}
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {buses.map((bus) => (
-            <BusCard key={bus.id} bus={bus} lang={lang} />
-          ))}
+          <div className="hidden lg:flex flex-col w-72 shadow-inner items-center justify-start gap-6 p-4 overflow-y-auto ">
+            <img src="./assets/right-side-ads/gyy.png" alt="ad1" />
+            <img src="./assets/right-side-ads/SR.png" alt="ad2" />
+            <img src="./assets/right-side-ads/gyy.png" alt="ad3" />
+          </div>
+        </section>
+
+        {/* Footer wali jagah yeh div add kar */}
+        <div className="w-full h-[700px] bg-gray-900 overflow-hidden">
+          <img
+            src="./assets/footer-ads/ad1.png"
+            alt="Footer Ad"
+            className="w-full h-full"
+          />
         </div>
       </main>
     </div>
