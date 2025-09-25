@@ -1,7 +1,6 @@
-// api/rsrtc/TimetableServices/VtsService.ts
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+// api/rsrtc/TimetableServices/VtsService.js
 
-export default async function handler(req: VercelRequest, res: VercelResponse) {
+export default async function handler(req, res) {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -9,8 +8,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
-    res.status(200).end();
-    return;
+    return res.status(200).end();
   }
 
   // Only allow POST requests
@@ -39,12 +37,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     // Set appropriate headers
     res.setHeader('Content-Type', 'text/xml');
-    res.status(200).send(xmlText);
+    return res.status(200).send(xmlText);
+    
   } catch (error) {
     console.error('RSRTC API Error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Failed to fetch RSRTC services',
-      details: error instanceof Error ? error.message : 'Unknown error'
+      details: error.message || 'Unknown error'
     });
   }
 }
